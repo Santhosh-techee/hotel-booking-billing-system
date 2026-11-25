@@ -1,0 +1,168 @@
+@using HotelBookingSystem.Models
+@using HotelBookingSystem.ViewModels
+@model CheckoutViewModel
+@{
+    ViewData["Title"] = "Checkout";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<input type="hidden" id="roomChargesRaw" value="@Model.RoomCharges" />
+<input type="hidden" id="serviceChargesRaw" value="@Model.ServiceCharges" />
+<input type="hidden" id="gstRateRaw" value="@Model.GstRate" />
+
+<div class="page-header">
+    <div class="container">
+        <h1><i class="bi bi-box-arrow-right me-2"></i>Guest Checkout</h1>
+        @if (Model.Booking != null)
+        {
+            <p class="mb-0" style="color:rgba(255,255,255,0.7);">
+                @Model.Booking.GuestName &bull; @Model.Booking.BookingRef
+            </p>
+        }
+    </div>
+</div>
+
+<div class="container pb-5">
+    <div class="row g-4">
+
+        <!-- Checkout Form -->
+        <div class="col-lg-8">
+
+            <!-- Bill Summary -->
+            <div class="card-hotel p-4 mb-4">
+                <h5 class="section-title">Bill Summary</h5>
+                <table class="table mb-0">
+                    <tbody>
+                        <tr>
+                            <td>Room Charges (@Model.TotalNights night@(Model.TotalNights > 1 ? "s" : ""))</td>
+                            <td class="text-end fw-semibold">₹@Model.RoomCharges.ToString("N2")</td>
+                        </tr>
+                        <tr>
+                            <td>Service Charges</td>
+                            <td class="text-end fw-semibold">₹@Model.ServiceCharges.ToString("N2")</td>
+                        </tr>
+                        <tr class="text-success">
+                            <td>Discount</td>
+                            <td class="text-end">-₹<span id="previewDiscount">0.00</span></td>
+                        </tr>
+                        <tr>
+                            <td>CGST (@(Model.GstRate / 2)%)</td>
+                            <td class="text-end">₹<span id="previewCgst">@((Model.TaxAmount / 2m).ToString("N2"))</span></td>
+                        </tr>
+                        <tr>
+                            <td>SGST (@(Model.GstRate / 2)%)</td>
+                            <td class="text-end">₹<span id="previewSgst">@((Model.TaxAmount - Math.Round(Model.TaxAmount / 2m, 2)).ToString("N2"))</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>GST Total (@Model.GstRate%)</strong></td>
+                            <td class="text-end">₹<span id="previewTax">@Model.TaxAmount.ToString("N2")</span></td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr class="invoice-total-row">
+                            <td class="rounded-start"><strong>GRAND TOTAL</strong></td>
+                            <td class="text-end rounded-end">
+                                <strong>₹<span id="previewGrandTotal">@Model.GrandTotal.ToString("N2")</span></strong>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- Payment Form -->
+            <div class="form-section">
+                <form asp-controller="FrontDesk" asp-action="Checkout" method="post">
+                    @Html.AntiForgeryToken()
+                    <input asp-for="BookingId" type="hidden" />
+
+                    <div asp-validation-summary="All" class="alert alert-danger mb-3"></div>
+
+                    <div class="form-section-title">
+                        <i class="bi bi-credit-card me-2" style="color:var(--gold);"></i>Payment Details
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <label asp-for="PaymentMode" class="form-label fw-semibold">Payment Mode</label>
+                            <select asp-for="PaymentMode" class="form-select form-select-lg">
+                                <option value="Cash">💵 Cash</option>
+                                <option value="UPI">📱 UPI</option>
+                                <option value="Card">💳 Card</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-6">
+                            <label asp-for="Discount" class="form-label fw-semibold">Discount Amount (₹)</label>
+                            <input asp-for="Discount" class="form-control form-control-lg" type="number"
+                                   min="0" step="1" placeholder="0" />
+                            <span asp-validation-for="Discount" class="text-danger small"></span>
+                            <div class="form-text">Enter discount before GST is applied on room charges.</div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-gold w-100 py-3 mt-4" style="font-size:1.05rem;">
+                        <i class="bi bi-receipt me-2"></i>Confirm Checkout & Generate Invoice
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Right: Booking Summary -->
+        <div class="col-lg-4">
+            @if (Model.Booking != null)
+            {
+                <div class="running-total-panel mb-4" style="position:sticky;top:80px;">
+                    <h5><i class="bi bi-info-circle me-2"></i>Booking Info</h5>
+                    <div class="mt-3">
+                        <div class="running-total-line">
+                            <span>Ref</span><span>@Model.Booking.BookingRef</span>
+                        </div>
+                        <div class="running-total-line">
+                            <span>Guest</span><span>@Model.Booking.GuestName</span>
+                        </div>
+                        <div class="running-total-line">
+                            <span>Room</span>
+                            <span>@Model.Booking.Room?.RoomNumber — @Model.Booking.Room?.RoomType?.Name</span>
+                        </div>
+                        <div class="running-total-line">
+                            <span>Check-In</span><span>@Model.Booking.CheckInDate.ToString("dd MMM yyyy")</span>
+                        </div>
+                        <div class="running-total-line">
+                            <span>Check-Out</span><span>@Model.Booking.CheckOutDate.ToString("dd MMM yyyy")</span>
+                        </div>
+                        <div class="running-total-line">
+                            <span>Nights</span><span>@Model.TotalNights</span>
+                        </div>
+                        <div class="running-total-line">
+                            <span>Guests</span><span>@Model.Booking.GuestCount</span>
+                        </div>
+                    </div>
+                    <hr style="border-color:rgba(255,255,255,0.2);" />
+                    <div class="running-total-line">
+                        <span>GST Slab</span>
+                        <span class="running-grand">@Model.GstRate%</span>
+                    </div>
+                    <small style="color:rgba(255,255,255,0.45);font-size:0.72rem;">
+                        @(Model.Booking.Room?.RoomType?.BasePrice <= 7500
+                            ? "12% GST applies (tariff ≤ ₹7,500/night)"
+                            : "18% GST applies (tariff > ₹7,500/night)")
+                    </small>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        const discountInput = document.getElementById('Discount');
+        const previewDiscountEl = document.getElementById('previewDiscount');
+        if (discountInput) {
+            discountInput.addEventListener('input', () => {
+                if (previewDiscountEl)
+                    previewDiscountEl.textContent = parseFloat(discountInput.value || 0).toFixed(2);
+                recalcCheckout();
+            });
+        }
+    </script>
+}

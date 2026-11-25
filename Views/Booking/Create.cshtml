@@ -1,0 +1,155 @@
+@using HotelBookingSystem.ViewModels
+@model CreateBookingViewModel
+@{
+    ViewData["Title"] = "Confirm Booking";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="page-header">
+    <div class="container">
+        <h1><i class="bi bi-calendar-plus me-2"></i>Confirm Your Booking</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item">
+                    <a asp-controller="Home" asp-action="Index" style="color:rgba(255,255,255,0.65);">Home</a>
+                </li>
+                <li class="breadcrumb-item active">Book Room</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <div class="row g-4">
+
+        <!-- Booking Form -->
+        <div class="col-lg-8">
+            <form asp-controller="Booking" asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+                <input asp-for="RoomId" type="hidden" />
+                <input asp-for="CheckInDate" type="hidden" />
+                <input asp-for="CheckOutDate" type="hidden" />
+                <input asp-for="GuestCount" type="hidden" />
+
+                <div asp-validation-summary="All" class="alert alert-danger mb-3"></div>
+
+                <!-- Guest Details -->
+                <div class="form-section">
+                    <div class="form-section-title">
+                        <i class="bi bi-person-lines-fill me-2" style="color:var(--gold);"></i>Guest Details
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <label asp-for="GuestName" class="form-label">Full Name <span class="text-danger">*</span></label>
+                            <input asp-for="GuestName" class="form-control" placeholder="As per ID proof" />
+                            <span asp-validation-for="GuestName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-sm-6">
+                            <label asp-for="GuestPhone" class="form-label">Phone Number <span class="text-danger">*</span></label>
+                            <input asp-for="GuestPhone" class="form-control" placeholder="+91 XXXXX XXXXX" />
+                            <span asp-validation-for="GuestPhone" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stay Details (read-only) -->
+                <div class="form-section mt-4">
+                    <div class="form-section-title">
+                        <i class="bi bi-calendar-check me-2" style="color:var(--gold);"></i>Stay Details
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-sm-4">
+                            <label class="form-label">Check-In Date</label>
+                            <div class="form-control bg-light fw-semibold">@Model.CheckInDate.ToString("dd MMM yyyy")</div>
+                        </div>
+                        <div class="col-sm-4">
+                            <label class="form-label">Check-Out Date</label>
+                            <div class="form-control bg-light fw-semibold">@Model.CheckOutDate.ToString("dd MMM yyyy")</div>
+                        </div>
+                        <div class="col-sm-4">
+                            <label class="form-label">Duration</label>
+                            <div class="form-control bg-light fw-semibold">
+                                @Model.TotalNights Night@(Model.TotalNights > 1 ? "s" : "")
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <label class="form-label">Guests</label>
+                            <div class="form-control bg-light fw-semibold">@Model.GuestCount Guest@(Model.GuestCount > 1 ? "s" : "")</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-3 mt-4">
+                    <button type="submit" class="btn btn-gold flex-grow-1 py-3" style="font-size:1rem;">
+                        <i class="bi bi-check-circle me-2"></i>Confirm Booking
+                    </button>
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary py-3 px-4">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Room Summary -->
+        <div class="col-lg-4">
+            @if (Model.SelectedRoom != null)
+            {
+                @if (!string.IsNullOrEmpty(Model.SelectedRoom.RoomType?.ImageUrl))
+                {
+                    <img src="@Model.SelectedRoom.RoomType.ImageUrl" class="img-fluid rounded-3 mb-3 w-100"
+                         style="height:180px;object-fit:cover;" alt="Room" />
+                }
+
+                <div class="running-total-panel">
+                    <h5 class="mb-3"><i class="bi bi-receipt me-2"></i>Booking Summary</h5>
+
+                    <div class="running-total-line">
+                        <span>Room</span>
+                        <span>@Model.SelectedRoom.RoomNumber</span>
+                    </div>
+                    <div class="running-total-line">
+                        <span>Type</span>
+                        <span>@Model.SelectedRoom.RoomType?.Name</span>
+                    </div>
+                    <div class="running-total-line">
+                        <span>Rate / Night</span>
+                        <span>₹@Model.SelectedRoom.RoomType?.BasePrice.ToString("N0")</span>
+                    </div>
+                    <div class="running-total-line">
+                        <span>Nights</span>
+                        <span>@Model.TotalNights</span>
+                    </div>
+                    <div class="running-total-line">
+                        <span>Guests</span>
+                        <span>@Model.GuestCount</span>
+                    </div>
+
+                    <hr style="border-color:rgba(255,255,255,0.2);" />
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span style="color:rgba(255,255,255,0.75);">Room Subtotal</span>
+                        <span class="running-grand">₹@Model.EstimatedTotal.ToString("N0")</span>
+                    </div>
+                    <small style="color:rgba(255,255,255,0.4);font-size:0.72rem;display:block;margin-top:0.5rem;">
+                        * GST (12% or 18%) applicable at checkout
+                    </small>
+                </div>
+
+                <div class="card-hotel p-3 mt-3">
+                    <h6 class="text-navy mb-2"><i class="bi bi-info-circle me-1" style="color:var(--gold);"></i>Amenities</h6>
+                    @if (Model.SelectedRoom.RoomType?.Amenities != null)
+                    {
+                        @foreach (var a in Model.SelectedRoom.RoomType.Amenities.Split(','))
+                        {
+                            <span class="amenity-tag">@a.Trim()</span>
+                        }
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

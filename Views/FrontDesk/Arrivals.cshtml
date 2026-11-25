@@ -1,0 +1,101 @@
+@using HotelBookingSystem.Models
+@model IEnumerable<Booking>
+@{
+    ViewData["Title"] = "Arrivals / Check-In";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="page-header">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h1><i class="bi bi-box-arrow-in-right me-2"></i>Arrivals / Check-In</h1>
+                <p class="mb-0" style="color:rgba(255,255,255,0.7);">
+                    Confirmed bookings awaiting check-in — @DateTime.Now.ToString("dd MMM yyyy")
+                </p>
+            </div>
+            <div class="d-flex gap-2">
+                <a asp-controller="FrontDesk" asp-action="WalkIn" class="btn btn-gold">
+                    <i class="bi bi-person-plus me-1"></i>Walk-In Booking
+                </a>
+                <a asp-controller="FrontDesk" asp-action="Index" class="btn btn-outline-light">
+                    <i class="bi bi-grid-3x3-gap me-1"></i>Room Board
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container pb-5">
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5">
+            <div style="font-size:4rem;">🎉</div>
+            <h3 class="text-navy mt-3">No pending arrivals</h3>
+            <p class="text-muted">All guests are checked in, or no upcoming bookings.</p>
+            <a asp-controller="FrontDesk" asp-action="Index" class="btn btn-gold mt-2">
+                <i class="bi bi-grid-3x3-gap me-1"></i>View Room Board
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="card-hotel overflow-hidden">
+            <div class="table-responsive">
+                <table class="table-hotel mb-0">
+                    <thead>
+                        <tr>
+                            <th>Booking Ref</th>
+                            <th>Guest</th>
+                            <th>Room</th>
+                            <th>Check-In</th>
+                            <th>Check-Out</th>
+                            <th>Guests</th>
+                            <th>Booked On</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var b in Model.OrderBy(x => x.CheckInDate))
+                        {
+                            var isToday = b.CheckInDate.Date == DateTime.Today;
+                            var isPast = b.CheckInDate.Date < DateTime.Today;
+                            <tr class="@(isToday ? "table-warning" : isPast ? "table-danger" : "")">
+                                <td>
+                                    <strong>@b.BookingRef</strong>
+                                    @if (isToday)
+                                    {
+                                        <span class="badge bg-warning text-dark ms-1" style="font-size:0.65rem;">TODAY</span>
+                                    }
+                                    @if (isPast)
+                                    {
+                                        <span class="badge bg-danger ms-1" style="font-size:0.65rem;">OVERDUE</span>
+                                    }
+                                </td>
+                                <td>
+                                    @b.GuestName
+                                    <br /><small class="text-muted">@b.GuestPhone</small>
+                                </td>
+                                <td>
+                                    Room @b.Room?.RoomNumber
+                                    <br /><small class="text-muted">@b.Room?.RoomType?.Name</small>
+                                </td>
+                                <td>@b.CheckInDate.ToString("dd MMM yyyy")</td>
+                                <td>@b.CheckOutDate.ToString("dd MMM yyyy")</td>
+                                <td>@b.GuestCount</td>
+                                <td><small>@b.CreatedAt.ToString("dd MMM yy")</small></td>
+                                <td>
+                                    <a asp-controller="FrontDesk" asp-action="CheckIn"
+                                       asp-route-bookingId="@b.BookingId"
+                                       class="btn btn-sm btn-gold">
+                                        <i class="bi bi-box-arrow-in-right me-1"></i>Check In
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>

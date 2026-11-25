@@ -1,0 +1,175 @@
+@using HotelBookingSystem.ViewModels
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "Admin Dashboard";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var monthLabels = Model.MonthlyRevenue.Select(m => m.Month).ToList();
+    var monthRevenue = Model.MonthlyRevenue.Select(m => m.Revenue).ToList();
+    var rtLabels = Model.BookingsByRoomType.Select(r => r.RoomTypeName).ToList();
+    var rtCounts = Model.BookingsByRoomType.Select(r => r.Count).ToList();
+}
+
+<div class="page-header">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h1><i class="bi bi-speedometer2 me-2"></i>Admin Dashboard</h1>
+                <p class="mb-0" style="color:rgba(255,255,255,0.7);">Welcome back! Here's what's happening today.</p>
+            </div>
+            <span style="color:rgba(255,255,255,0.65);font-size:0.875rem;">
+                <i class="bi bi-clock me-1"></i>@DateTime.Now.ToString("dddd, dd MMM yyyy")
+            </span>
+        </div>
+    </div>
+</div>
+
+<div class="container pb-5">
+
+    <!-- KPI Cards -->
+    <div class="row g-4 mb-5">
+        <div class="col-sm-6 col-xl-3">
+            <div class="kpi-card kpi-revenue">
+                <div class="kpi-icon kpi-icon-revenue"><i class="bi bi-currency-rupee"></i></div>
+                <div>
+                    <div class="kpi-value">₹@Model.TotalRevenue.ToString("N0")</div>
+                    <div class="kpi-label">Total Revenue</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="kpi-card kpi-guests">
+                <div class="kpi-icon kpi-icon-guests"><i class="bi bi-people-fill"></i></div>
+                <div>
+                    <div class="kpi-value">@Model.ActiveGuests</div>
+                    <div class="kpi-label">Active Guests</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="kpi-card kpi-occupancy">
+                <div class="kpi-icon kpi-icon-occupancy"><i class="bi bi-house-fill"></i></div>
+                <div>
+                    <div class="kpi-value">@Model.OccupancyRate%</div>
+                    <div class="kpi-label">Occupancy Rate</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="kpi-card kpi-checkins">
+                <div class="kpi-icon kpi-icon-checkins"><i class="bi bi-box-arrow-in-right"></i></div>
+                <div>
+                    <div class="kpi-value">@Model.TodayCheckIns</div>
+                    <div class="kpi-label">Today's Check-Ins</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-8">
+            <div class="card-hotel p-4">
+                <h5 class="section-title">Monthly Revenue (Last 12 Months)</h5>
+                <canvas id="revenueChart" height="100"></canvas>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card-hotel p-4">
+                <h5 class="section-title">Bookings by Room Type</h5>
+                <canvas id="roomTypeChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row g-3">
+        <div class="col-12">
+            <h5 class="section-title">Quick Actions</h5>
+        </div>
+        <div class="col-6 col-md-3">
+            <a asp-controller="FrontDesk" asp-action="Index" class="card-hotel p-3 text-center d-block text-decoration-none">
+                <div class="fs-2 mb-2">🏨</div>
+                <div class="fw-semibold text-navy small">Room Board</div>
+            </a>
+        </div>
+        <div class="col-6 col-md-3">
+            <a asp-controller="Admin" asp-action="Bookings" class="card-hotel p-3 text-center d-block text-decoration-none">
+                <div class="fs-2 mb-2">📋</div>
+                <div class="fw-semibold text-navy small">All Bookings</div>
+                <span class="badge bg-navy">@Model.TotalBookings</span>
+            </a>
+        </div>
+        <div class="col-6 col-md-3">
+            <a asp-controller="Admin" asp-action="RoomTypes" class="card-hotel p-3 text-center d-block text-decoration-none">
+                <div class="fs-2 mb-2">🛏️</div>
+                <div class="fw-semibold text-navy small">Room Types</div>
+            </a>
+        </div>
+        <div class="col-6 col-md-3">
+            <a asp-controller="Admin" asp-action="Invoices" class="card-hotel p-3 text-center d-block text-decoration-none">
+                <div class="fs-2 mb-2">🧾</div>
+                <div class="fw-semibold text-navy small">Invoices</div>
+            </a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        // Revenue Chart
+        new Chart(document.getElementById('revenueChart'), {
+            type: 'line',
+            data: {
+                labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(monthLabels)),
+                datasets: [{
+                    label: 'Revenue (₹)',
+                    data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(monthRevenue)),
+                    borderColor: '#C5A059',
+                    backgroundColor: 'rgba(197,160,89,0.1)',
+                    borderWidth: 2.5,
+                    pointBackgroundColor: '#C5A059',
+                    pointRadius: 5,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: v => '₹' + (v/1000).toFixed(0) + 'K',
+                            color: '#6B7280'
+                        },
+                        grid: { color: 'rgba(0,0,0,0.05)' }
+                    },
+                    x: { ticks: { color: '#6B7280' }, grid: { display: false } }
+                }
+            }
+        });
+
+        // Room Type Pie Chart
+        new Chart(document.getElementById('roomTypeChart'), {
+            type: 'doughnut',
+            data: {
+                labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(rtLabels)),
+                datasets: [{
+                    data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(rtCounts)),
+                    backgroundColor: ['#1B263B', '#C5A059', '#2D3F5C'],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom', labels: { font: { size: 12 } } }
+                },
+                cutout: '65%'
+            }
+        });
+    </script>
+}

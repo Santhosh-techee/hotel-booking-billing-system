@@ -1,0 +1,86 @@
+@using HotelBookingSystem.Models
+@model IEnumerable<Service>
+@{
+    ViewData["Title"] = "Extra Services";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="page-header">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1><i class="bi bi-bag-heart me-2"></i>Extra Services</h1>
+                <nav aria-label="breadcrumb"><ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a asp-controller="Admin" asp-action="Dashboard" style="color:rgba(255,255,255,0.65);">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Services</li>
+                </ol></nav>
+            </div>
+            <a asp-controller="Admin" asp-action="CreateService" class="btn btn-gold">
+                <i class="bi bi-plus-circle me-1"></i>Add Service
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <div class="card-hotel overflow-hidden">
+        <div class="table-responsive">
+            <table class="table-hotel mb-0">
+                <thead>
+                    <tr>
+                        <th>Service Name</th>
+                        <th class="text-end">Price (₹)</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var svc in Model)
+                    {
+                        <tr>
+                            <td>
+                                <i class="bi bi-bag-check me-2" style="color:var(--gold);"></i>
+                                <strong>@svc.ServiceName</strong>
+                            </td>
+                            <td class="text-end fw-semibold">₹@svc.Price.ToString("N2")</td>
+                            <td class="text-center">
+                                @if (svc.IsActive)
+                                {
+                                    <span class="status-badge badge-available">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="status-badge badge-cancelled">Inactive</span>
+                                }
+                            </td>
+                            <td class="text-center">
+                                <div class="d-flex gap-1 justify-content-center">
+                                    <a asp-controller="Admin" asp-action="EditService" asp-route-id="@svc.ServiceId"
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form asp-controller="Admin" asp-action="DeleteService" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@svc.ServiceId" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                data-confirm="Delete service '@svc.ServiceName'?">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5">
+            <div style="font-size:4rem;">🛎️</div>
+            <h3 class="text-navy mt-3">No Services Configured</h3>
+            <a asp-controller="Admin" asp-action="CreateService" class="btn btn-gold mt-2">Add First Service</a>
+        </div>
+    }
+</div>

@@ -1,0 +1,125 @@
+@using HotelBookingSystem.Models
+@model IEnumerable<Room>
+@{
+    ViewData["Title"] = "Room Status Board";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var checkedInBookings = ViewBag.CheckedInBookings as List<Booking> ?? new List<Booking>();
+
+    string StatusClass(RoomStatus s) => s switch {
+        RoomStatus.Available   => "rsc-available",
+        RoomStatus.Booked      => "rsc-booked",
+        RoomStatus.Occupied    => "rsc-occupied rsc-pulse",
+        RoomStatus.Cleaning    => "rsc-cleaning",
+        RoomStatus.Maintenance => "rsc-maintenance",
+        _                      => "rsc-available"
+    };
+}
+
+<div class="page-header">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h1><i class="bi bi-grid-3x3-gap me-2"></i>Live Room Status Board</h1>
+                <p class="mb-0" style="color:rgba(255,255,255,0.7);">
+                    Real-time room availability — @DateTime.Now.ToString("dddd, dd MMM yyyy HH:mm")
+                </p>
+            </div>
+            <div class="d-flex gap-2">
+                <a asp-controller="FrontDesk" asp-action="WalkIn" class="btn btn-gold">
+                    <i class="bi bi-person-plus me-1"></i>Walk-In Check-In
+                </a>
+                <a asp-controller="FrontDesk" asp-action="Arrivals" class="btn btn-outline-light">
+                    <i class="bi bi-box-arrow-in-right me-1"></i>Arrivals
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container pb-5">
+
+    <!-- Legend -->
+    <div class="d-flex flex-wrap gap-3 mb-4 p-3 card-hotel align-items-center">
+        <span class="fw-semibold text-navy me-2">Legend:</span>
+        <span class="d-flex align-items-center gap-2 small">
+            <span class="badge" style="background:#22C55E;width:12px;height:12px;border-radius:50%;padding:0;"></span> Available
+        </span>
+        <span class="d-flex align-items-center gap-2 small">
+            <span class="badge" style="background:#3B82F6;width:12px;height:12px;border-radius:50%;padding:0;"></span> Booked
+        </span>
+        <span class="d-flex align-items-center gap-2 small">
+            <span class="badge" style="background:#EF4444;width:12px;height:12px;border-radius:50%;padding:0;"></span> Occupied
+        </span>
+        <span class="d-flex align-items-center gap-2 small">
+            <span class="badge" style="background:#F59E0B;width:12px;height:12px;border-radius:50%;padding:0;"></span> Cleaning
+        </span>
+        <span class="d-flex align-items-center gap-2 small">
+            <span class="badge" style="background:#6B7280;width:12px;height:12px;border-radius:50%;padding:0;"></span> Maintenance
+        </span>
+        <span class="ms-auto text-muted small">Total: @Model.Count() rooms</span>
+    </div>
+
+    <div class="row g-3">
+        @foreach (var room in Model.OrderBy(r => r.RoomNumber))
+        {
+            var sc = StatusClass(room.Status);
+            var activeBooking = checkedInBookings.FirstOrDefault(b => b.RoomId == room.RoomId);
+
+            <div class="col-6 col-md-4 col-lg-3 col-xl-2">
+                <div class="room-status-card @sc h-100">
+                    <div class="room-number">@room.RoomNumber</div>
+                    <div class="room-type">@room.RoomType?.Name</div>
+                    <div class="room-floor">Floor @room.Floor</div>
+                    <div class="room-status-label">@room.Status</div>
+
+                    @if (activeBooking != null)
+                    {
+                        <div class="mt-2 p-1 rounded" style="background:rgba(0,0,0,0.15);font-size:0.68rem;">
+                            <div class="fw-semibold">@activeBooking.GuestName</div>
+                            <div>Out: @activeBooking.CheckOutDate.ToString("dd MMM")</div>
+                        </div>
+                        <a asp-controller="FrontDesk" asp-action="ActiveStay"
+                           asp-route-bookingId="@activeBooking.BookingId"
+                           class="btn btn-sm btn-navy mt-2 w-100" style="font-size:0.68rem;">
+                            <i class="bi bi-eye me-1"></i>Manage
+                        </a>
+                    }
+                    else if (room.Status == RoomStatus.Available)
+                    {
+                        <a asp-controller="FrontDesk" asp-action="WalkIn"
+                           asp-route-roomId="@room.RoomId"
+                           class="btn btn-sm btn-light mt-2 w-100" style="font-size:0.68rem;">
+                            <i class="bi bi-person-plus me-1"></i>Walk-In
+                        </a>
+                    }
+
+                    <!-- Quick Status Toggle -->
+                    <div class="mt-2">
+                        <div class="dropdown">
+                            <button class="btn btn-sm w-100" type="button" data-bs-toggle="dropdown"
+                                    style="font-size:0.68rem;background:rgba(0,0,0,0.15);border:1px solid rgba(0,0,0,0.1);color:inherit;">
+                                Change ▾
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-dark" style="font-size:0.8rem;min-width:150px;">
+                                @foreach (var s in Enum.GetValues<RoomStatus>())
+                                {
+                                    if (s != room.Status)
+                                    {
+                                        <li>
+                                            <form asp-controller="FrontDesk" asp-action="ToggleStatus" method="post">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="roomId" value="@room.RoomId" />
+                                                <input type="hidden" name="status" value="@((int)s)" />
+                                                <button type="submit" class="dropdown-item">→ @s</button>
+                                            </form>
+                                        </li>
+                                    }
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

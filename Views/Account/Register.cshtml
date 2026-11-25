@@ -1,0 +1,81 @@
+@using HotelBookingSystem.ViewModels
+@model RegisterViewModel
+@{
+    ViewData["Title"] = "Create Account";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="min-vh-100 d-flex align-items-center py-5"
+     style="background:linear-gradient(135deg,var(--navy-dark) 0%,var(--navy) 60%,var(--navy-light) 100%);">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-5 col-lg-4">
+                <div class="text-center mb-4">
+                    <div style="font-size:2.5rem;font-family:'Poppins',sans-serif;font-weight:800;color:#fff;letter-spacing:1px;">
+                        GRAND<span style="color:var(--gold);">HORIZON</span>
+                    </div>
+                    <p style="color:rgba(255,255,255,0.6);font-size:0.9rem;">Create your guest account</p>
+                </div>
+
+                <div class="card border-0 rounded-4 shadow-lg" style="background:var(--white);">
+                    <div class="card-body p-4">
+                        <div asp-validation-summary="All" class="alert alert-danger py-2 mb-3"></div>
+
+                        <form asp-controller="Account" asp-action="Register" method="post">
+                            @Html.AntiForgeryToken()
+
+                            <div class="mb-3">
+                                <label asp-for="FullName" class="form-label fw-semibold">
+                                    <i class="bi bi-person me-1" style="color:var(--gold);"></i>Full Name
+                                </label>
+                                <input asp-for="FullName" class="form-control" placeholder="John Smith" autocomplete="name" />
+                                <span asp-validation-for="FullName" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Email" class="form-label fw-semibold">
+                                    <i class="bi bi-envelope me-1" style="color:var(--gold);"></i>Email Address
+                                </label>
+                                <input asp-for="Email" type="email" class="form-control" placeholder="you@example.com" autocomplete="email" />
+                                <span asp-validation-for="Email" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Password" class="form-label fw-semibold">
+                                    <i class="bi bi-lock me-1" style="color:var(--gold);"></i>Password
+                                </label>
+                                <input asp-for="Password" type="password" class="form-control" placeholder="Min. 6 chars, 1 uppercase, 1 special" />
+                                <span asp-validation-for="Password" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-4">
+                                <label asp-for="ConfirmPassword" class="form-label fw-semibold">
+                                    <i class="bi bi-lock-fill me-1" style="color:var(--gold);"></i>Confirm Password
+                                </label>
+                                <input asp-for="ConfirmPassword" type="password" class="form-control" placeholder="Repeat your password" />
+                                <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                            </div>
+
+                            <button type="submit" class="btn btn-gold w-100 py-3" style="font-size:1rem;">
+                                <i class="bi bi-person-check me-2"></i>Create Account
+                            </button>
+                        </form>
+
+                        <hr class="my-4" />
+                        <div class="text-center">
+                            <small class="text-muted">Already have an account?</small><br />
+                            <a asp-controller="Account" asp-action="Login"
+                               class="btn btn-outline-secondary mt-2 w-100">
+                                <i class="bi bi-box-arrow-in-right me-1"></i>Sign In
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

@@ -1,0 +1,88 @@
+@using HotelBookingSystem.Models
+@model RoomType
+@{
+    ViewData["Title"] = "Edit Room Type";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="page-header">
+    <div class="container">
+        <h1><i class="bi bi-pencil me-2"></i>Edit Room Type</h1>
+        <nav aria-label="breadcrumb"><ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a asp-controller="Admin" asp-action="Dashboard" style="color:rgba(255,255,255,0.65);">Dashboard</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Admin" asp-action="RoomTypes" style="color:rgba(255,255,255,0.65);">Room Types</a></li>
+            <li class="breadcrumb-item active">Edit</li>
+        </ol></nav>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="form-section">
+                <form asp-controller="Admin" asp-action="EditRoomType" method="post" enctype="multipart/form-data">
+                    @Html.AntiForgeryToken()
+                    <input asp-for="RoomTypeId" type="hidden" />
+                    <div asp-validation-summary="All" class="alert alert-danger mb-3"></div>
+
+                    <div class="form-section-title">
+                        <i class="bi bi-tags me-2" style="color:var(--gold);"></i>Room Type Details
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-sm-8">
+                            <label asp-for="Name" class="form-label">Type Name <span class="text-danger">*</span></label>
+                            <input asp-for="Name" class="form-control" />
+                            <span asp-validation-for="Name" class="text-danger small"></span>
+                        </div>
+                        <div class="col-sm-4">
+                            <label asp-for="MaxGuests" class="form-label">Max Guests <span class="text-danger">*</span></label>
+                            <input asp-for="MaxGuests" type="number" class="form-control" min="1" max="10" />
+                            <span asp-validation-for="MaxGuests" class="text-danger small"></span>
+                        </div>
+                        <div class="col-sm-6">
+                            <label asp-for="BasePrice" class="form-label">Base Price / Night (₹) <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text">₹</span>
+                                <input asp-for="BasePrice" type="number" class="form-control" step="0.01" min="0" />
+                            </div>
+                            <span asp-validation-for="BasePrice" class="text-danger small"></span>
+                        </div>
+                        <div class="col-sm-6">
+                            <label asp-for="ImageUrl" class="form-label">Image URL</label>
+                            <input asp-for="ImageUrl" class="form-control" placeholder="https://..." />
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Amenities" class="form-label">Amenities (comma-separated) <span class="text-danger">*</span></label>
+                            <input asp-for="Amenities" class="form-control" />
+                            <span asp-validation-for="Amenities" class="text-danger small"></span>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Replace Image (optional)</label>
+                            <input type="file" name="imageFile" class="form-control" accept=".jpg,.jpeg,.png,.webp" />
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                    {
+                        <div class="mt-3">
+                            <label class="form-label">Current Image</label>
+                            <div><img src="@Model.ImageUrl" class="img-thumbnail" style="max-height:120px;" /></div>
+                        </div>
+                    }
+
+                    <div class="d-flex gap-3 mt-4">
+                        <button type="submit" class="btn btn-gold flex-grow-1 py-3">
+                            <i class="bi bi-check-circle me-1"></i>Update Room Type
+                        </button>
+                        <a asp-controller="Admin" asp-action="RoomTypes" class="btn btn-outline-secondary py-3 px-4">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

@@ -1,0 +1,184 @@
+@using HotelBookingSystem.Models
+@model IEnumerable<Booking>
+@{
+    ViewData["Title"] = "All Bookings";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    string search = ViewBag.Search as string ?? "";
+    string statusFilter = ViewBag.StatusFilter as string ?? "";
+    string dateFrom = ViewBag.From as string ?? "";
+    string dateTo = ViewBag.To as string ?? "";
+    int currentPage = ViewBag.CurrentPage ?? 1;
+    int totalPages = ViewBag.TotalPages ?? 1;
+    int totalRecords = ViewBag.TotalRecords ?? Model.Count();
+}
+
+<div class="page-header">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h1><i class="bi bi-journal-bookmark me-2"></i>All Bookings</h1>
+                <nav aria-label="breadcrumb"><ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a asp-controller="Admin" asp-action="Dashboard" style="color:rgba(255,255,255,0.65);">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Bookings</li>
+                </ol></nav>
+            </div>
+            <span class="badge bg-dark px-3 py-2">@totalRecords record(s)</span>
+        </div>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <!-- Search & Filters -->
+    <div class="card-hotel p-3 mb-4">
+        <form method="get" asp-controller="Admin" asp-action="Bookings" class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold">Search</label>
+                <input type="text" name="search" class="form-control form-control-sm"
+                       value="@search" placeholder="Ref, guest, phone, room..." />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold">Status</label>
+                <select name="statusFilter" class="form-select form-select-sm">
+                    <option value="">All Statuses</option>
+                    @foreach (var s in Enum.GetValues<BookingStatus>())
+                    {
+                        <option value="@s" selected="@(s.ToString() == statusFilter)">@s</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold">Check-In From</label>
+                <input type="date" name="from" class="form-control form-control-sm" value="@dateFrom" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold">Check-In To</label>
+                <input type="date" name="to" class="form-control form-control-sm" value="@dateTo" />
+            </div>
+            <div class="col-md-3">
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-gold btn-sm flex-grow-1">
+                        <i class="bi bi-funnel me-1"></i>Apply
+                    </button>
+                    <a asp-controller="Admin" asp-action="Bookings" class="btn btn-outline-secondary btn-sm">Clear</a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="card-hotel overflow-hidden">
+        <div class="table-responsive">
+            <table class="table-hotel mb-0">
+                <thead>
+                    <tr>
+                        <th>Ref</th>
+                        <th>Guest</th>
+                        <th>Room</th>
+                        <th>Check-In</th>
+                        <th>Check-Out</th>
+                        <th>Status</th>
+                        <th>Invoice</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var b in Model)
+                    {
+                        var statusClass = b.BookingStatus switch {
+                            BookingStatus.Confirmed  => "badge-confirmed",
+                            BookingStatus.CheckedIn  => "badge-checkedin",
+                            BookingStatus.CheckedOut => "badge-checkedout",
+                            BookingStatus.Cancelled  => "badge-cancelled",
+                            _                        => "badge-pending"
+                        };
+                        <tr>
+                            <td>
+                                <strong class="text-navy">@b.BookingRef</strong>
+                                <br /><small class="text-muted">@b.CreatedAt.ToString("dd MMM yy")</small>
+                            </td>
+                            <td>@b.GuestName<br /><small class="text-muted">@b.GuestPhone</small></td>
+                            <td>Rm @b.Room?.RoomNumber<br /><small class="text-muted">@b.Room?.RoomType?.Name</small></td>
+                            <td>@b.CheckInDate.ToString("dd MMM yyyy")</td>
+                            <td>@b.CheckOutDate.ToString("dd MMM yyyy")</td>
+                            <td><span class="status-badge @statusClass">@b.BookingStatus</span></td>
+                            <td>
+                                @if (b.Invoice != null)
+                                {
+                                    <a asp-controller="Invoice" asp-action="Details" asp-route-invoiceId="@b.Invoice.InvoiceId"
+                                       class="text-success small" title="@b.Invoice.InvoiceNumber">
+                                        <i class="bi bi-receipt me-1"></i>@b.Invoice.InvoiceNumber
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">—</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    <a asp-controller="Booking" asp-action="Details" asp-route-id="@b.BookingId"
+                                       class="btn btn-sm btn-outline-secondary" title="Details">
+                                        <i class="bi bi-info-circle"></i>
+                                    </a>
+                                    @if (b.BookingStatus == BookingStatus.Confirmed)
+                                    {
+                                        <a asp-controller="FrontDesk" asp-action="CheckIn" asp-route-bookingId="@b.BookingId"
+                                           class="btn btn-sm btn-navy" title="Check In">
+                                            <i class="bi bi-box-arrow-in-right"></i>
+                                        </a>
+                                    }
+                                    @if (b.BookingStatus == BookingStatus.CheckedIn)
+                                    {
+                                        <a asp-controller="FrontDesk" asp-action="ActiveStay" asp-route-bookingId="@b.BookingId"
+                                           class="btn btn-sm btn-gold" title="Active Stay">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    }
+                                    @if (b.Invoice != null)
+                                    {
+                                        <a asp-controller="Invoice" asp-action="DownloadPdf" asp-route-invoiceId="@b.Invoice.InvoiceId"
+                                           class="btn btn-sm btn-outline-success" title="Download PDF">
+                                            <i class="bi bi-file-earmark-pdf"></i>
+                                        </a>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        @if (!Model.Any())
+        {
+            <div class="text-center py-5">
+                <div style="font-size:3rem;">📋</div>
+                <p class="text-muted mt-2">No bookings match your search or filter.</p>
+            </div>
+        }
+    </div>
+
+    @if (totalPages > 1)
+    {
+        <nav aria-label="Bookings pagination" class="mt-4">
+            <ul class="pagination justify-content-center mb-0">
+                <li class="page-item @(currentPage <= 1 ? "disabled" : "")">
+                    <a class="page-link" asp-controller="Admin" asp-action="Bookings"
+                       asp-route-search="@search" asp-route-statusFilter="@statusFilter"
+                       asp-route-from="@dateFrom" asp-route-to="@dateTo" asp-route-page="@(currentPage - 1)">Previous</a>
+                </li>
+                @for (int p = 1; p <= totalPages; p++)
+                {
+                    <li class="page-item @(p == currentPage ? "active" : "")">
+                        <a class="page-link" asp-controller="Admin" asp-action="Bookings"
+                           asp-route-search="@search" asp-route-statusFilter="@statusFilter"
+                           asp-route-from="@dateFrom" asp-route-to="@dateTo" asp-route-page="@p">@p</a>
+                    </li>
+                }
+                <li class="page-item @(currentPage >= totalPages ? "disabled" : "")">
+                    <a class="page-link" asp-controller="Admin" asp-action="Bookings"
+                       asp-route-search="@search" asp-route-statusFilter="@statusFilter"
+                       asp-route-from="@dateFrom" asp-route-to="@dateTo" asp-route-page="@(currentPage + 1)">Next</a>
+                </li>
+            </ul>
+        </nav>
+    }
+</div>

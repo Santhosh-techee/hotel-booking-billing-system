@@ -1,0 +1,78 @@
+@using HotelBookingSystem.Models
+@model IEnumerable<RoomType>
+@{
+    ViewData["Title"] = "Room Types";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="page-header">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1><i class="bi bi-tags me-2"></i>Room Types</h1>
+                <nav aria-label="breadcrumb"><ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a asp-controller="Admin" asp-action="Dashboard" style="color:rgba(255,255,255,0.65);">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Room Types</li>
+                </ol></nav>
+            </div>
+            <a asp-controller="Admin" asp-action="CreateRoomType" class="btn btn-gold">
+                <i class="bi bi-plus-circle me-1"></i>Add Room Type
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <div class="row g-4">
+        @foreach (var rt in Model)
+        {
+            <div class="col-md-6 col-lg-4">
+                <div class="card-hotel h-100">
+                    @if (!string.IsNullOrEmpty(rt.ImageUrl))
+                    {
+                        <div style="overflow:hidden;height:180px;">
+                            <img src="@rt.ImageUrl" class="w-100" alt="@rt.Name"
+                                 style="height:180px;object-fit:cover;" />
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="d-flex align-items-center justify-content-center bg-navy" style="height:180px;">
+                            <span style="font-size:3.5rem;">🛏️</span>
+                        </div>
+                    }
+                    <div class="card-body d-flex flex-column p-4">
+                        <h5 class="text-navy mb-1">@rt.Name</h5>
+                        <div class="d-flex gap-2 mb-2 flex-wrap">
+                            <span class="badge bg-navy">₹@rt.BasePrice.ToString("N0")/night</span>
+                            <span class="badge bg-secondary">Max @rt.MaxGuests guests</span>
+                        </div>
+                        <p class="text-muted small mb-3">@rt.Amenities</p>
+                        <div class="mt-auto d-flex gap-2">
+                            <a asp-controller="Admin" asp-action="EditRoomType" asp-route-id="@rt.RoomTypeId"
+                               class="btn btn-sm btn-outline-primary flex-grow-1">
+                                <i class="bi bi-pencil me-1"></i>Edit
+                            </a>
+                            <form asp-controller="Admin" asp-action="DeleteRoomType" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@rt.RoomTypeId" />
+                                <button type="submit" class="btn btn-sm btn-outline-danger"
+                                        data-confirm="Delete room type '@rt.Name'? This cannot be undone.">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5">
+            <div style="font-size:4rem;">🏷️</div>
+            <h3 class="text-navy mt-3">No Room Types Yet</h3>
+            <a asp-controller="Admin" asp-action="CreateRoomType" class="btn btn-gold mt-2">Add First Room Type</a>
+        </div>
+    }
+</div>

@@ -1,0 +1,201 @@
+@using HotelBookingSystem.Models
+@model Invoice
+@{
+    ViewData["Title"] = "Invoice " + Model.InvoiceNumber;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var nights = Math.Max(1, (Model.Booking.CheckOutDate - Model.Booking.CheckInDate).Days);
+}
+
+<div class="page-header">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h1><i class="bi bi-receipt me-2"></i>Tax Invoice</h1>
+                <p class="mb-0" style="color:rgba(255,255,255,0.7);">@Model.InvoiceNumber</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a asp-controller="Invoice" asp-action="DownloadPdf" asp-route-invoiceId="@Model.InvoiceId"
+                   class="btn btn-gold">
+                    <i class="bi bi-file-earmark-pdf me-1"></i>Download PDF
+                </a>
+                <a asp-controller="Booking" asp-action="MyBookings" class="btn btn-outline-light">
+                    <i class="bi bi-arrow-left me-1"></i>Back
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <div class="invoice-container">
+
+        <!-- Invoice Header -->
+        <div class="invoice-header">
+            <div class="row align-items-start">
+                <div class="col-7">
+                    <div class="invoice-hotel-name">
+                        GRAND <span style="color:var(--gold);">HORIZON</span>
+                    </div>
+                    <small class="text-muted">Luxury Redefined, Every Stay</small><br />
+                    <small class="text-muted">123 Palace Road, Chennai — 600 001, Tamil Nadu</small><br />
+                    <small class="text-muted">GSTIN: 33AABCG1234F1Z5 &nbsp;|&nbsp; Ph: +91 44 1234 5678</small><br />
+                    <small class="text-muted">Email: billing@grandhorizon.in</small>
+                </div>
+                <div class="col-5 text-end">
+                    <div class="invoice-number-badge">@Model.InvoiceNumber</div>
+                    <div class="mt-2">
+                        <small class="text-muted">Date: @Model.CreatedAt.ToString("dd MMM yyyy")</small>
+                    </div>
+                    <div class="mt-1">
+                        <span class="status-badge badge-paid">✓ PAID</span>
+                    </div>
+                    <div class="mt-1">
+                        <small class="text-muted">Mode: @Model.PaymentMode</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <hr class="divider-gold" />
+
+        <!-- Guest & Booking Info -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-6">
+                <h6 class="section-title">Billed To</h6>
+                <div class="fw-bold fs-5">@Model.Booking.GuestName</div>
+                <div class="text-muted small">📞 @Model.Booking.GuestPhone</div>
+                @if (Model.Booking.Guest != null)
+                {
+                    <div class="text-muted small">✉ @Model.Booking.Guest.Email</div>
+                }
+                @if (!string.IsNullOrEmpty(Model.Booking.IdProofNumber))
+                {
+                    <div class="text-muted small">🪪 ID: @Model.Booking.IdProofNumber</div>
+                }
+            </div>
+            <div class="col-md-6">
+                <h6 class="section-title">Booking Details</h6>
+                <table class="table table-sm mb-0">
+                    <tr>
+                        <td class="text-muted border-0 ps-0 py-1">Booking Ref</td>
+                        <td class="fw-bold border-0 py-1">@Model.Booking.BookingRef</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted border-0 ps-0 py-1">Room</td>
+                        <td class="border-0 py-1">Room @Model.Booking.Room?.RoomNumber — @Model.Booking.Room?.RoomType?.Name</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted border-0 ps-0 py-1">Check-In</td>
+                        <td class="border-0 py-1">@Model.Booking.CheckInDate.ToString("dd MMM yyyy")</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted border-0 ps-0 py-1">Check-Out</td>
+                        <td class="border-0 py-1">@Model.Booking.CheckOutDate.ToString("dd MMM yyyy")</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted border-0 ps-0 py-1">Duration</td>
+                        <td class="border-0 py-1 fw-semibold">@nights Night@(nights > 1 ? "s" : "")</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted border-0 ps-0 py-1">Guests</td>
+                        <td class="border-0 py-1">@Model.Booking.GuestCount</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Charges Breakdown -->
+        <h6 class="section-title">Charges Breakdown</h6>
+        <div class="table-responsive mb-4">
+            <table class="table-hotel">
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th class="text-center">Qty</th>
+                        <th class="text-end">Unit Price</th>
+                        <th class="text-end">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            Room @Model.Booking.Room?.RoomNumber — @Model.Booking.Room?.RoomType?.Name
+                            <br /><small class="text-muted">(@nights night@(nights > 1 ? "s" : "") accommodation)</small>
+                        </td>
+                        <td class="text-center">@nights</td>
+                        <td class="text-end">₹@Model.Booking.Room?.RoomType?.BasePrice.ToString("N2")</td>
+                        <td class="text-end fw-semibold">₹@Model.RoomCharges.ToString("N2")</td>
+                    </tr>
+                    @if (Model.Booking.BookingServices != null)
+                    {
+                        @foreach (var bs in Model.Booking.BookingServices)
+                        {
+                            <tr>
+                                <td>@bs.Service?.ServiceName</td>
+                                <td class="text-center">@bs.Quantity</td>
+                                <td class="text-end">₹@bs.UnitPrice.ToString("N2")</td>
+                                <td class="text-end fw-semibold">₹@((bs.UnitPrice * bs.Quantity).ToString("N2"))</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Totals -->
+        <div class="row justify-content-end">
+            <div class="col-md-5">
+                <table class="table table-sm">
+                    <tr>
+                        <td class="text-muted">Room Charges</td>
+                        <td class="text-end">₹@Model.RoomCharges.ToString("N2")</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Service Charges</td>
+                        <td class="text-end">₹@Model.ServiceCharges.ToString("N2")</td>
+                    </tr>
+                    @if (Model.Discount > 0)
+                    {
+                        <tr class="text-success">
+                            <td>Discount Applied</td>
+                            <td class="text-end">-₹@Model.Discount.ToString("N2")</td>
+                        </tr>
+                    }
+                    <tr>
+                        <td class="text-muted">CGST (@(Model.GstRate / 2)%)</td>
+                        <td class="text-end">₹@Model.CgstAmount.ToString("N2")</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">SGST (@(Model.GstRate / 2)%)</td>
+                        <td class="text-end">₹@Model.SgstAmount.ToString("N2")</td>
+                    </tr>
+                </table>
+                <table class="table mb-0">
+                    <tr class="invoice-total-row">
+                        <td class="rounded-start"><strong>GRAND TOTAL</strong></td>
+                        <td class="text-end rounded-end fw-bold fs-5">₹@Model.GrandTotal.ToString("N2")</td>
+                    </tr>
+                </table>
+                <div class="mt-3 d-flex justify-content-between align-items-center">
+                    <small class="text-muted">
+                        <i class="bi bi-credit-card me-1"></i>Paid via @Model.PaymentMode
+                    </small>
+                    <span class="status-badge badge-paid">PAID ✓</span>
+                </div>
+            </div>
+        </div>
+
+        <hr class="divider-gold mt-4" />
+
+        <!-- Footer -->
+        <div class="text-center p-4 rounded-3" style="background:rgba(197,160,89,0.06);border:1px solid rgba(197,160,89,0.15);">
+            <p class="mb-1 fw-bold" style="color:var(--gold);font-family:'Poppins',sans-serif;">
+                Thank you for staying at Grand Horizon Hotel!
+            </p>
+            <small class="text-muted">
+                This is a computer-generated invoice. Valid without a physical signature.<br />
+                For queries: billing@grandhorizon.in | +91 44 1234 5678
+            </small>
+        </div>
+    </div>
+</div>

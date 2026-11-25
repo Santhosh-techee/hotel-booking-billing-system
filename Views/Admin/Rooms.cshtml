@@ -1,0 +1,86 @@
+@using HotelBookingSystem.Models
+@model IEnumerable<Room>
+@{
+    ViewData["Title"] = "Rooms";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="page-header">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1><i class="bi bi-door-open me-2"></i>Rooms</h1>
+                <nav aria-label="breadcrumb"><ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a asp-controller="Admin" asp-action="Dashboard" style="color:rgba(255,255,255,0.65);">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Rooms</li>
+                </ol></nav>
+            </div>
+            <a asp-controller="Admin" asp-action="CreateRoom" class="btn btn-gold">
+                <i class="bi bi-plus-circle me-1"></i>Add Room
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <div class="card-hotel overflow-hidden">
+        <div class="table-responsive">
+            <table class="table-hotel mb-0">
+                <thead>
+                    <tr>
+                        <th>Room No.</th>
+                        <th>Type</th>
+                        <th>Floor</th>
+                        <th>Rate / Night</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var room in Model.OrderBy(r => r.RoomNumber))
+                    {
+                        var statusClass = room.Status switch {
+                            RoomStatus.Available   => "badge-available",
+                            RoomStatus.Booked      => "badge-booked",
+                            RoomStatus.Occupied    => "badge-occupied",
+                            RoomStatus.Cleaning    => "badge-cleaning",
+                            RoomStatus.Maintenance => "badge-maintenance",
+                            _ => "badge-pending"
+                        };
+                        <tr>
+                            <td><strong class="text-navy">@room.RoomNumber</strong></td>
+                            <td>@room.RoomType?.Name</td>
+                            <td>Floor @room.Floor</td>
+                            <td>₹@room.RoomType?.BasePrice.ToString("N0")/night</td>
+                            <td><span class="status-badge @statusClass">@room.Status</span></td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    <a asp-controller="Admin" asp-action="EditRoom" asp-route-id="@room.RoomId"
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form asp-controller="Admin" asp-action="DeleteRoom" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@room.RoomId" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                data-confirm="Delete Room @room.RoomNumber?">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5">
+            <div style="font-size:4rem;">🚪</div>
+            <h3 class="text-navy mt-3">No Rooms Added Yet</h3>
+            <a asp-controller="Admin" asp-action="CreateRoom" class="btn btn-gold mt-2">Add First Room</a>
+        </div>
+    }
+</div>

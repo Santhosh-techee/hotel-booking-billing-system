@@ -1,0 +1,73 @@
+@using HotelBookingSystem.Models
+@model Room
+@{
+    ViewData["Title"] = "New Room";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="page-header">
+    <div class="container">
+        <h1><i class="bi bi-plus-circle me-2"></i>Add New Room</h1>
+        <nav aria-label="breadcrumb"><ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a asp-controller="Admin" asp-action="Rooms" style="color:rgba(255,255,255,0.65);">Rooms</a></li>
+            <li class="breadcrumb-item active">Create</li>
+        </ol></nav>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-7">
+            <div class="form-section">
+                <form asp-controller="Admin" asp-action="CreateRoom" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="All" class="alert alert-danger mb-3"></div>
+
+                    <div class="form-section-title">
+                        <i class="bi bi-door-open me-2" style="color:var(--gold);"></i>Room Details
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <label asp-for="RoomNumber" class="form-label">Room Number <span class="text-danger">*</span></label>
+                            <input asp-for="RoomNumber" class="form-control" placeholder="e.g. 101" />
+                            <span asp-validation-for="RoomNumber" class="text-danger small"></span>
+                        </div>
+                        <div class="col-sm-6">
+                            <label asp-for="Floor" class="form-label">Floor <span class="text-danger">*</span></label>
+                            <input asp-for="Floor" type="number" class="form-control" min="1" max="50" />
+                            <span asp-validation-for="Floor" class="text-danger small"></span>
+                        </div>
+                        <div class="col-sm-6">
+                            <label asp-for="RoomTypeId" class="form-label">Room Type <span class="text-danger">*</span></label>
+                            <select asp-for="RoomTypeId" class="form-select" asp-items="ViewBag.RoomTypes">
+                                <option value="">— Select Room Type —</option>
+                            </select>
+                            <span asp-validation-for="RoomTypeId" class="text-danger small"></span>
+                        </div>
+                        <div class="col-sm-6">
+                            <label asp-for="Status" class="form-label">Initial Status</label>
+                            <select asp-for="Status" class="form-select">
+                                @foreach (var s in Enum.GetValues<RoomStatus>())
+                                {
+                                    <option value="@s">@s</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-3 mt-4">
+                        <button type="submit" class="btn btn-gold flex-grow-1 py-3">
+                            <i class="bi bi-check-circle me-1"></i>Create Room
+                        </button>
+                        <a asp-controller="Admin" asp-action="Rooms" class="btn btn-outline-secondary py-3 px-4">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
